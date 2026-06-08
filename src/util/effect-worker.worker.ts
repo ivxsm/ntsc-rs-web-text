@@ -9,6 +9,7 @@ import init, {
 import {postMessageFromWorker, type MessageFromWorker, type MessageToWorker} from './worker-rpc';
 import Queuetex from './async-queue';
 import encodePng from './encode-png';
+import fontUrl from '../assets/fonts/thmanyahseriftext-Light.otf';
 
 export type TextOverlayPosition = 'center' | 'top' | 'bottom';
 
@@ -118,6 +119,14 @@ const listener = async(event: MessageEvent) => {
                             originId: null,
                         });
                     });
+
+                    try {
+                        const font = new FontFace('TitleFont', `url(${fontUrl})`);
+                        await font.load();
+                        self.fonts.add(font);
+                    } catch {
+                        // Font failed to load, fall back to sans-serif
+                    }
 
                     return {
                         effect: new NtscEffectBuf(),
@@ -286,7 +295,7 @@ const renderFrame = async<F extends keyof Formats>(
             ctx.putImageData(imageData, 0, 0);
 
             const fontSize = Math.max(16, Math.round(titleFontSize * frameH / 480));
-            ctx.font = `bold ${fontSize}px sans-serif`;
+            ctx.font = `300 ${fontSize}px 'TitleFont', sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
