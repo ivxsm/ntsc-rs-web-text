@@ -4,6 +4,7 @@ import RpcDispatcher from './worker-rpc';
 import {ResizeFilter, Rotation} from '../../ntsc-rs-web-wrapper/build/ntsc_rs_web_wrapper';
 import {wasmModulePromise} from './ntsc-rs-module';
 import {TypedEvent, TypedEventTarget} from './typed-events';
+import type {TextOverlayPosition} from '../app-state';
 
 export type EffectWorker = RpcDispatcher<WorkerSchema>;
 
@@ -35,6 +36,11 @@ export type RenderFrameSettings = {
         bottom: number,
         left: number,
     } | null,
+    titleEnabled: boolean,
+    titleText: string,
+    titleDuration: number,
+    titleFontSize: number,
+    titlePosition: TextOverlayPosition,
 };
 
 export class PanicEvent extends TypedEvent<'panic'> {
@@ -158,6 +164,11 @@ export default class EffectWorkerPool extends TypedEventTarget<PanicEvent> {
                 frameNum: settings.frameNum,
                 padToEven: settings.padToEven,
                 outputRect: settings.outputRect,
+                titleEnabled: settings.titleEnabled,
+                titleText: settings.titleText,
+                titleDuration: settings.titleDuration,
+                titleFontSize: settings.titleFontSize,
+                titlePosition: settings.titlePosition,
             }, [settings.frame]);
             await waitForRelease;
             return renderedFrame as Formats[F];

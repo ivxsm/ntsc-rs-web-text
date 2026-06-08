@@ -119,6 +119,8 @@ class PresentationLoop extends TypedEventTarget<PresentEvent | DoneEvent> {
     }
 }
 
+import type {TextOverlayPosition} from '../app-state';
+
 export type PipelineSettings = {
     resizeHeight: number | null;
     resizeFilter: ResizeFilter;
@@ -130,6 +132,11 @@ export type PipelineSettings = {
         bottom: number;
         right: number;
     } | null;
+    titleEnabled: boolean;
+    titleText: string;
+    titleDuration: number;
+    titleFontSize: number;
+    titlePosition: TextOverlayPosition;
 };
 
 export default class MediaPlayer extends TypedEventTarget<FrameEvent | StateChangeEvent | CanvasResizeEvent> {
@@ -268,6 +275,34 @@ export default class MediaPlayer extends TypedEventTarget<FrameEvent | StateChan
     set effectSettings(settings: Record<string, number | boolean>) {
         if (this.pipelineSettings.effectSettings === settings) return;
         this.pipelineSettings.effectSettings = settings;
+        void this.reRender();
+    }
+
+    get titleSettings() {
+        return {
+            titleEnabled: this.pipelineSettings.titleEnabled,
+            titleText: this.pipelineSettings.titleText,
+            titleDuration: this.pipelineSettings.titleDuration,
+            titleFontSize: this.pipelineSettings.titleFontSize,
+            titlePosition: this.pipelineSettings.titlePosition,
+        };
+    }
+
+    set titleSettings(settings: {
+        titleEnabled: boolean,
+        titleText: string,
+        titleDuration: number,
+        titleFontSize: number,
+        titlePosition: TextOverlayPosition,
+    }) {
+        if (
+            this.pipelineSettings.titleEnabled === settings.titleEnabled &&
+            this.pipelineSettings.titleText === settings.titleText &&
+            this.pipelineSettings.titleDuration === settings.titleDuration &&
+            this.pipelineSettings.titleFontSize === settings.titleFontSize &&
+            this.pipelineSettings.titlePosition === settings.titlePosition
+        ) return;
+        Object.assign(this.pipelineSettings, settings);
         void this.reRender();
     }
 

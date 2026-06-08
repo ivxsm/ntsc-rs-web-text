@@ -47,6 +47,8 @@ export type PresetsState = {
     presetsPanelOpen: Signal<boolean>;
 };
 
+export type TextOverlayPosition = 'center' | 'top' | 'bottom';
+
 export type SettingsObj = Record<string, number | boolean>;
 
 export class AppState {
@@ -80,6 +82,12 @@ export class AppState {
     } | null>;
 
     stillImageFrameRate: Signal<number>;
+
+    titleEnabled: Signal<boolean>;
+    titleText: Signal<string>;
+    titleDuration: Signal<number>;
+    titleFontSize: Signal<number>;
+    titlePosition: Signal<TextOverlayPosition>;
 
     renderVideoCodec: Signal<AppVideoCodec | null>;
     renderVideoBitrate: Signal<number>;
@@ -152,6 +160,12 @@ export class AppState {
                 left: this.previewSplitRect.left.value,
             };
         });
+        this.titleEnabled = signal(false);
+        this.titleText = signal('');
+        this.titleDuration = signal(2);
+        this.titleFontSize = signal(48);
+        this.titlePosition = signal('center');
+
         this.stillImageFrameRate = signal(30);
         this.renderVideoCodec = signal('avc');
         this.renderVideoBitrate = signal(10);
@@ -194,6 +208,11 @@ export class AppState {
                 stillImageFrameRate: this.stillImageFrameRate.value,
                 mute: this.mute.value,
                 volume: this.volume.value,
+                titleEnabled: this.titleEnabled.value,
+                titleText: this.titleText.value,
+                titleDuration: this.titleDuration.value,
+                titleFontSize: this.titleFontSize.value,
+                titlePosition: this.titlePosition.value,
                 renderVideoCodec: this.renderVideoCodec.value,
                 renderVideoBitrate: this.renderVideoBitrate.value,
                 renderStillImageDuration: this.renderStillImageDuration.value,
@@ -291,6 +310,11 @@ export class AppState {
                     effectEnabled: true,
                     effectSettings: this.settingsAsObject.value,
                     outputRect: null,
+                    titleEnabled: this.titleEnabled.value,
+                    titleText: this.titleText.value,
+                    titleDuration: this.titleDuration.value,
+                    titleFontSize: this.titleFontSize.value,
+                    titlePosition: this.titlePosition.value,
                 },
                 stillImageDuration: this.renderStillImageDuration.value,
                 stillImageFrameRate: this.stillImageFrameRate.value,
@@ -402,6 +426,11 @@ type SavedState = Partial<{
     stillImageFrameRate: number,
     mute: boolean,
     volume: number,
+    titleEnabled: boolean,
+    titleText: string,
+    titleDuration: number,
+    titleFontSize: number,
+    titlePosition: TextOverlayPosition,
     renderVideoCodec: AppVideoCodec | null,
     renderVideoBitrate: number,
     renderStillImageDuration: number,
@@ -426,6 +455,11 @@ const loadState = (store: AppState) => {
             'stillImageFrameRate',
             'mute',
             'volume',
+            'titleEnabled',
+            'titleText',
+            'titleDuration',
+            'titleFontSize',
+            'titlePosition',
             'renderVideoCodec',
             'renderVideoBitrate',
             'renderStillImageDuration',

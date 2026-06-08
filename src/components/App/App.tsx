@@ -6,6 +6,7 @@ import VideoPlayer from '../VideoPlayer/VideoPlayer';
 import SettingsPane from '../SettingsList/SettingsList';
 import TabbedPanel from '../TabbedPanel/TabbedPanel';
 import RenderSettingsPane from '../RenderSettingsPane/RenderSettingsPane';
+import TitleOverlayPane from '../TitleOverlayPane/TitleOverlayPane';
 import ResizablePanel from '../ResizablePanel/ResizablePanel';
 import DisclaimerModal from '../DisclaimerModal/DisclaimerModal';
 import {useAppState} from '../../app-state';
@@ -87,6 +88,11 @@ const App = () => {
                         id: 'effect-settings',
                         panel: <SettingsPane />,
                         title: 'Effect',
+                    },
+                    {
+                        id: 'title',
+                        panel: <TitleOverlayPane />,
+                        title: 'Title',
                     },
                     {
                         id: 'render-settings',

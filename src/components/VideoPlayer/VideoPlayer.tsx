@@ -53,6 +53,11 @@ const VideoPlayer = () => {
                     effectEnabled: appState.effectPreviewMode.value !== 'disabled',
                     effectSettings: appState.settingsAsObject.value,
                     outputRect: appState.previewSplitRectAsObject.value,
+                    titleEnabled: appState.titleEnabled.value,
+                    titleText: appState.titleText.value,
+                    titleDuration: appState.titleDuration.value,
+                    titleFontSize: appState.titleFontSize.value,
+                    titlePosition: appState.titlePosition.value,
                 }, appState.stillImageFrameRate.value))
                 .then(player => {
                     mediaPlayer.value = {state: 'loaded', player};
@@ -637,6 +642,15 @@ const VideoPaneInner = ({player}: {player: MediaPlayer}) => {
     useLayoutEffect(() => {
         player.outputRect = appState.previewSplitRectAsObject.value;
     }, [appState.previewSplitRectAsObject.value]);
+    useLayoutEffect(() => {
+        player.titleSettings = {
+            titleEnabled: appState.titleEnabled.value,
+            titleText: appState.titleText.value,
+            titleDuration: appState.titleDuration.value,
+            titleFontSize: appState.titleFontSize.value,
+            titlePosition: appState.titlePosition.value,
+        };
+    }, [appState.titleEnabled.value, appState.titleText.value, appState.titleDuration.value, appState.titleFontSize.value, appState.titlePosition.value]);
 
     const viewportSize = useRef({blockSize: 0, inlineSize: 0});
     const resizeCanvas = useCallback(() => {

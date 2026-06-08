@@ -10,6 +10,8 @@ import {postMessageFromWorker, type MessageFromWorker, type MessageToWorker} fro
 import Queuetex from './async-queue';
 import encodePng from './encode-png';
 
+export type TextOverlayPosition = 'center' | 'top' | 'bottom';
+
 export type RenderFrame = {
     frame: VideoFrame,
     resizeHeight: number | null,
@@ -24,6 +26,11 @@ export type RenderFrame = {
         bottom: number,
         left: number,
     } | null,
+    titleEnabled: boolean,
+    titleText: string,
+    titleDuration: number,
+    titleFontSize: number,
+    titlePosition: TextOverlayPosition,
 };
 
 export type WorkerSchema =
@@ -200,7 +207,7 @@ export type Formats = {
 };
 
 const renderFrame = async<F extends keyof Formats>(
-    {frame, rotation, resizeHeight, resizeFilter, effectEnabled, frameNum, padToEven, outputRect}: RenderFrame,
+    {frame, rotation, resizeHeight, resizeFilter, effectEnabled, frameNum, padToEven, outputRect, titleEnabled, titleText, titleDuration, titleFontSize, titlePosition}: RenderFrame,
     format: F,
 ): Promise<Formats[F]> => {
     checkEffectData(effectData);
@@ -261,15 +268,70 @@ const renderFrame = async<F extends keyof Formats>(
             rect.bottom,
             rect.left,
         );
-        const dstFrameClamped = new Uint8ClampedArray(
+        const frameTimestamp = frame.timestamp;
+        const showTitle = titleEnabled && titleText && titleDuration > 0 && frameTimestamp < titleDuration * 1_000_000;
+
+        let dstFrameClamped = new Uint8ClampedArray(
             memory.buffer,
             dstFrameWasm.ptr,
             dstFrameWasm.len,
         );
+        const frameW = dstFrameWasm.width;
+        const frameH = dstFrameWasm.height;
+
+        if (showTitle) {
+            const canvas = new OffscreenCanvas(frameW, frameH);
+            const ctx = canvas.getContext('2d')!;
+            const imageData = new ImageData(dstFrameClamped, frameW, frameH);
+            ctx.putImageData(imageData, 0, 0);
+
+            const fontSize = Math.max(16, Math.round(titleFontSize * frameH / 480));
+            ctx.font = `bold ${fontSize}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const padding = Math.round(frameH * 0.05);
+            const maxWidth = frameW - padding * 2;
+            let y: number;
+            switch (titlePosition) {
+                case 'top':
+                    y = padding + fontSize;
+                    ctx.textBaseline = 'top';
+                    break;
+                case 'bottom':
+                    y = frameH - padding - fontSize;
+                    ctx.textBaseline = 'bottom';
+                    break;
+                default:
+                    y = frameH / 2;
+                    break;
+            }
+
+            const lines = wrapText(ctx, titleText, maxWidth);
+            const lineHeight = fontSize * 1.3;
+            const totalHeight = lines.length * lineHeight;
+
+            if (titlePosition === 'center') {
+                y -= totalHeight / 2;
+                ctx.textBaseline = 'top';
+            }
+
+            ctx.shadowColor = 'black';
+            ctx.shadowBlur = Math.round(fontSize * 0.15);
+            ctx.fillStyle = 'white';
+            for (const line of lines) {
+                ctx.fillText(line, frameW / 2, y, maxWidth);
+                y += lineHeight;
+            }
+
+            const imageDataOut = ctx.getImageData(0, 0, frameW, frameH);
+            dstFrameClamped = imageDataOut.data;
+        }
+
         switch (format) {
             case 'imagebitmap':
                 return await createImageBitmap(
-                    new ImageData(dstFrameClamped, dstFrameWasm.width, dstFrameWasm.height),
+                    new ImageData(dstFrameClamped, frameW, frameH),
                     {
                         premultiplyAlpha: 'none',
                         colorSpaceConversion: 'none',
@@ -278,23 +340,37 @@ const renderFrame = async<F extends keyof Formats>(
             case 'videoframe':
                 return new VideoFrame(dstFrameClamped, {
                     format: 'RGBX',
-                    codedWidth: dstFrameWasm.width,
-                    codedHeight: dstFrameWasm.height,
-                    timestamp: frame.timestamp,
+                    codedWidth: frameW,
+                    codedHeight: frameH,
+                    timestamp: frameTimestamp,
                     duration: frame.duration ?? undefined,
                 }) as Formats[F];
             case 'pngBlob': {
-                // We can't just call toBlob on the canvas because, as mentioned above, Firefox randomizes the pixel
-                // data slightly before returning it. Instead, we have to ship an entire PNG encoder. Feeling
-                // "private" yet?
                 const blob = await encodePng(
-                    new ImageData(dstFrameClamped, dstFrameWasm.width, dstFrameWasm.height),
-                    false, /* encodeAlpha */
+                    new ImageData(dstFrameClamped, frameW, frameH),
+                    false,
                 );
                 return blob as Formats[F];
             }
         }
     });
 };
+
+function wrapText(ctx: OffscreenCanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+    const words = text.split(' ');
+    const lines: string[] = [];
+    let currentLine = '';
+    for (const word of words) {
+        const testLine = currentLine ? `${currentLine} ${word}` : word;
+        if (ctx.measureText(testLine).width > maxWidth && currentLine) {
+            lines.push(currentLine);
+            currentLine = word;
+        } else {
+            currentLine = testLine;
+        }
+    }
+    if (currentLine) lines.push(currentLine);
+    return lines;
+}
 
 addEventListener('message', listener);
