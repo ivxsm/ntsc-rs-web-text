@@ -119,7 +119,7 @@ class PresentationLoop extends TypedEventTarget<PresentEvent | DoneEvent> {
     }
 }
 
-import type {TextOverlayPosition} from '../app-state';
+import type {TextOverlayPosition, TitleFontFamily} from '../app-state';
 
 export type PipelineSettings = {
     resizeHeight: number | null;
@@ -137,6 +137,7 @@ export type PipelineSettings = {
     titleDuration: number;
     titleFontSize: number;
     titlePosition: TextOverlayPosition;
+    titleFontFamily: TitleFontFamily;
 };
 
 export default class MediaPlayer extends TypedEventTarget<FrameEvent | StateChangeEvent | CanvasResizeEvent> {
@@ -285,6 +286,7 @@ export default class MediaPlayer extends TypedEventTarget<FrameEvent | StateChan
             titleDuration: this.pipelineSettings.titleDuration,
             titleFontSize: this.pipelineSettings.titleFontSize,
             titlePosition: this.pipelineSettings.titlePosition,
+            titleFontFamily: this.pipelineSettings.titleFontFamily,
         };
     }
 
@@ -294,13 +296,15 @@ export default class MediaPlayer extends TypedEventTarget<FrameEvent | StateChan
         titleDuration: number,
         titleFontSize: number,
         titlePosition: TextOverlayPosition,
+        titleFontFamily: TitleFontFamily,
     }) {
         if (
             this.pipelineSettings.titleEnabled === settings.titleEnabled &&
             this.pipelineSettings.titleText === settings.titleText &&
             this.pipelineSettings.titleDuration === settings.titleDuration &&
             this.pipelineSettings.titleFontSize === settings.titleFontSize &&
-            this.pipelineSettings.titlePosition === settings.titlePosition
+            this.pipelineSettings.titlePosition === settings.titlePosition &&
+            this.pipelineSettings.titleFontFamily === settings.titleFontFamily
         ) return;
         Object.assign(this.pipelineSettings, settings);
         void this.reRender();

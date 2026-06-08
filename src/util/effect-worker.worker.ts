@@ -9,9 +9,15 @@ import init, {
 import {postMessageFromWorker, type MessageFromWorker, type MessageToWorker} from './worker-rpc';
 import Queuetex from './async-queue';
 import encodePng from './encode-png';
-import fontUrl from '../assets/fonts/thmanyahseriftext-Light.otf';
+import textLightUrl from '../assets/fonts/thmanyahseriftext-Light.otf';
+import textBoldUrl from '../assets/fonts/thmanyahseriftext-Bold.otf';
+import textBlackUrl from '../assets/fonts/thmanyahseriftext-Black.otf';
+import displayLightUrl from '../assets/fonts/thmanyahserifdisplay-Light.otf';
+import displayBoldUrl from '../assets/fonts/thmanyahserifdisplay-Bold.otf';
+import displayBlackUrl from '../assets/fonts/thmanyahserifdisplay-Black.otf';
 
 export type TextOverlayPosition = 'center' | 'top' | 'bottom';
+export type TitleFontFamily = 't-serif-light' | 't-serif-bold' | 't-serif-black' | 't-display-light' | 't-display-bold' | 't-display-black';
 
 export type RenderFrame = {
     frame: VideoFrame,
@@ -32,6 +38,7 @@ export type RenderFrame = {
     titleDuration: number,
     titleFontSize: number,
     titlePosition: TextOverlayPosition,
+    titleFontFamily: TitleFontFamily,
 };
 
 export type WorkerSchema =
@@ -120,12 +127,21 @@ const listener = async(event: MessageEvent) => {
                         });
                     });
 
-                    try {
-                        const font = new FontFace('TitleFont', `url(${fontUrl})`);
-                        await font.load();
-                        self.fonts.add(font);
-                    } catch {
-                        // Font failed to load, fall back to sans-serif
+                    for (const [family, url] of [
+                        ['TSerif Light', textLightUrl],
+                        ['TSerif Bold', textBoldUrl],
+                        ['TSerif Black', textBlackUrl],
+                        ['TDisplay Light', displayLightUrl],
+                        ['TDisplay Bold', displayBoldUrl],
+                        ['TDisplay Black', displayBlackUrl],
+                    ] as const) {
+                        try {
+                            const font = new FontFace(family, `url(${url})`);
+                            await font.load();
+                            self.fonts.add(font);
+                        } catch {
+                            // Font failed to load, fall back to sans-serif
+                        }
                     }
 
                     return {
@@ -216,7 +232,7 @@ export type Formats = {
 };
 
 const renderFrame = async<F extends keyof Formats>(
-    {frame, rotation, resizeHeight, resizeFilter, effectEnabled, frameNum, padToEven, outputRect, titleEnabled, titleText, titleDuration, titleFontSize, titlePosition}: RenderFrame,
+    {frame, rotation, resizeHeight, resizeFilter, effectEnabled, frameNum, padToEven, outputRect, titleEnabled, titleText, titleDuration, titleFontSize, titlePosition, titleFontFamily}: RenderFrame,
     format: F,
 ): Promise<Formats[F]> => {
     checkEffectData(effectData);
@@ -295,7 +311,15 @@ const renderFrame = async<F extends keyof Formats>(
             ctx.putImageData(imageData, 0, 0);
 
             const fontSize = Math.max(16, Math.round(titleFontSize * frameH / 480));
-            ctx.font = `300 ${fontSize}px 'TitleFont', sans-serif`;
+            const fontFamilyMap: Record<TitleFontFamily, string> = {
+                't-serif-light': "'TSerif Light'",
+                't-serif-bold': "'TSerif Bold'",
+                't-serif-black': "'TSerif Black'",
+                't-display-light': "'TDisplay Light'",
+                't-display-bold': "'TDisplay Bold'",
+                't-display-black': "'TDisplay Black'",
+            };
+            ctx.font = `${fontSize}px ${fontFamilyMap[titleFontFamily] ?? "'TSerif Light'"}, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 

@@ -48,6 +48,7 @@ export type PresetsState = {
 };
 
 export type TextOverlayPosition = 'center' | 'top' | 'bottom';
+export type TitleFontFamily = 't-serif-light' | 't-serif-bold' | 't-serif-black' | 't-display-light' | 't-display-bold' | 't-display-black';
 
 export type SettingsObj = Record<string, number | boolean>;
 
@@ -88,6 +89,7 @@ export class AppState {
     titleDuration: Signal<number>;
     titleFontSize: Signal<number>;
     titlePosition: Signal<TextOverlayPosition>;
+    titleFontFamily: Signal<TitleFontFamily>;
 
     renderVideoCodec: Signal<AppVideoCodec | null>;
     renderVideoBitrate: Signal<number>;
@@ -165,6 +167,7 @@ export class AppState {
         this.titleDuration = signal(2);
         this.titleFontSize = signal(48);
         this.titlePosition = signal('center');
+        this.titleFontFamily = signal('t-serif-light');
 
         this.stillImageFrameRate = signal(30);
         this.renderVideoCodec = signal('avc');
@@ -213,6 +216,7 @@ export class AppState {
                 titleDuration: this.titleDuration.value,
                 titleFontSize: this.titleFontSize.value,
                 titlePosition: this.titlePosition.value,
+                titleFontFamily: this.titleFontFamily.value,
                 renderVideoCodec: this.renderVideoCodec.value,
                 renderVideoBitrate: this.renderVideoBitrate.value,
                 renderStillImageDuration: this.renderStillImageDuration.value,
@@ -315,6 +319,7 @@ export class AppState {
                     titleDuration: this.titleDuration.value,
                     titleFontSize: this.titleFontSize.value,
                     titlePosition: this.titlePosition.value,
+                    titleFontFamily: this.titleFontFamily.value,
                 },
                 stillImageDuration: this.renderStillImageDuration.value,
                 stillImageFrameRate: this.stillImageFrameRate.value,
@@ -431,6 +436,7 @@ type SavedState = Partial<{
     titleDuration: number,
     titleFontSize: number,
     titlePosition: TextOverlayPosition,
+    titleFontFamily: TitleFontFamily,
     renderVideoCodec: AppVideoCodec | null,
     renderVideoBitrate: number,
     renderStillImageDuration: number,
@@ -460,6 +466,7 @@ const loadState = (store: AppState) => {
             'titleDuration',
             'titleFontSize',
             'titlePosition',
+            'titleFontFamily',
             'renderVideoCodec',
             'renderVideoBitrate',
             'renderStillImageDuration',

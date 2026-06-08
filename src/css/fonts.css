@@ -24,8 +24,48 @@
 
 @font-face {
   font-display: swap;
-  font-family: 'Thmanyah Serif Text';
+  font-family: 'TSerif Light';
   font-style: normal;
   font-weight: 300;
   src: url('../assets/fonts/thmanyahseriftext-Light.otf') format('opentype');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'TSerif Bold';
+  font-style: normal;
+  font-weight: 700;
+  src: url('../assets/fonts/thmanyahseriftext-Bold.otf') format('opentype');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'TDisplay Light';
+  font-style: normal;
+  font-weight: 300;
+  src: url('../assets/fonts/thmanyahserifdisplay-Light.otf') format('opentype');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'TDisplay Bold';
+  font-style: normal;
+  font-weight: 700;
+  src: url('../assets/fonts/thmanyahserifdisplay-Bold.otf') format('opentype');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'TDisplay Black';
+  font-style: normal;
+  font-weight: 900;
+  src: url('../assets/fonts/thmanyahserifdisplay-Black.otf') format('opentype');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'TSerif Black';
+  font-style: normal;
+  font-weight: 900;
+  src: url('../assets/fonts/thmanyahseriftext-Black.otf') format('opentype');
 }

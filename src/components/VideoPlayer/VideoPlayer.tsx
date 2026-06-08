@@ -58,6 +58,7 @@ const VideoPlayer = () => {
                     titleDuration: appState.titleDuration.value,
                     titleFontSize: appState.titleFontSize.value,
                     titlePosition: appState.titlePosition.value,
+                    titleFontFamily: appState.titleFontFamily.value,
                 }, appState.stillImageFrameRate.value))
                 .then(player => {
                     mediaPlayer.value = {state: 'loaded', player};
@@ -649,8 +650,9 @@ const VideoPaneInner = ({player}: {player: MediaPlayer}) => {
             titleDuration: appState.titleDuration.value,
             titleFontSize: appState.titleFontSize.value,
             titlePosition: appState.titlePosition.value,
+            titleFontFamily: appState.titleFontFamily.value,
         };
-    }, [appState.titleEnabled.value, appState.titleText.value, appState.titleDuration.value, appState.titleFontSize.value, appState.titlePosition.value]);
+    }, [appState.titleEnabled.value, appState.titleText.value, appState.titleDuration.value, appState.titleFontSize.value, appState.titlePosition.value, appState.titleFontFamily.value]);
 
     const viewportSize = useRef({blockSize: 0, inlineSize: 0});
     const resizeCanvas = useCallback(() => {

@@ -1,6 +1,6 @@
 import style from './style.module.scss';
 
-import {useAppState, TextOverlayPosition} from '../../app-state';
+import {useAppState, TextOverlayPosition, TitleFontFamily} from '../../app-state';
 import {CheckboxToggle, Dropdown, Slider, TextBox} from '../Widgets/Widgets';
 import {SliderWithSpinBox} from '../SettingsList/SettingsList';
 
@@ -10,8 +10,17 @@ const positionOptions: {id: TextOverlayPosition, name: string}[] = [
     {id: 'bottom', name: 'Bottom'},
 ];
 
+const fontOptions: {id: TitleFontFamily, name: string}[] = [
+    {id: 't-serif-light', name: 'Serif Text Light'},
+    {id: 't-serif-bold', name: 'Serif Text Bold'},
+    {id: 't-serif-black', name: 'Serif Text Black'},
+    {id: 't-display-light', name: 'Serif Display Light'},
+    {id: 't-display-bold', name: 'Serif Display Bold'},
+    {id: 't-display-black', name: 'Serif Display Black'},
+];
+
 const TitleOverlayPane = () => {
-    const {titleEnabled, titleText, titleDuration, titleFontSize, titlePosition} = useAppState();
+    const {titleEnabled, titleText, titleDuration, titleFontSize, titlePosition, titleFontFamily} = useAppState();
 
     return (
         <div className={style.titlePane}>
@@ -38,6 +47,10 @@ const TitleOverlayPane = () => {
                         step={1}
                     />
                     <div className={style.settingLabel}>Font size</div>
+                </div>
+                <div className={style.setting}>
+                    <Dropdown value={titleFontFamily} options={fontOptions} />
+                    <div className={style.settingLabel}>Font</div>
                 </div>
                 <div className={style.setting}>
                     <Dropdown value={titlePosition} options={positionOptions} />
