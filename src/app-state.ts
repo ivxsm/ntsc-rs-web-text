@@ -49,7 +49,6 @@ export type PresetsState = {
 
 export type TextOverlayPosition = 'center' | 'top' | 'bottom';
 export type TitleFontFamily = 't-serif-light' | 't-serif-bold' | 't-serif-black' | 't-display-light' | 't-display-bold' | 't-display-black';
-export type DateTimeMode = 'both' | 'date-only' | 'time-only';
 export type DateTimePosition = 'bottom-right' | 'bottom-left';
 
 export type SettingsObj = Record<string, number | boolean>;
@@ -94,8 +93,10 @@ export class AppState {
     titleFontFamily: Signal<TitleFontFamily>;
 
     vhsDateTimeEnabled: Signal<boolean>;
-    vhsDateTimeMode: Signal<DateTimeMode>;
     vhsDateTimePosition: Signal<DateTimePosition>;
+    vhsDateTimeUseCustom: Signal<boolean>;
+    vhsCustomDate: Signal<string>;
+    vhsDateTimeSize: Signal<number>;
 
     renderVideoCodec: Signal<AppVideoCodec | null>;
     renderVideoBitrate: Signal<number>;
@@ -176,8 +177,10 @@ export class AppState {
         this.titleFontFamily = signal('t-serif-light');
 
         this.vhsDateTimeEnabled = signal(false);
-        this.vhsDateTimeMode = signal('both');
         this.vhsDateTimePosition = signal('bottom-right');
+        this.vhsDateTimeUseCustom = signal(false);
+        this.vhsCustomDate = signal(new Date().toISOString().slice(0, 10));
+        this.vhsDateTimeSize = signal(35);
 
         this.stillImageFrameRate = signal(30);
         this.renderVideoCodec = signal('avc');
@@ -228,8 +231,10 @@ export class AppState {
                 titlePosition: this.titlePosition.value,
                 titleFontFamily: this.titleFontFamily.value,
                 vhsDateTimeEnabled: this.vhsDateTimeEnabled.value,
-                vhsDateTimeMode: this.vhsDateTimeMode.value,
                 vhsDateTimePosition: this.vhsDateTimePosition.value,
+                vhsDateTimeUseCustom: this.vhsDateTimeUseCustom.value,
+                vhsCustomDate: this.vhsCustomDate.value,
+                vhsDateTimeSize: this.vhsDateTimeSize.value,
                 renderVideoCodec: this.renderVideoCodec.value,
                 renderVideoBitrate: this.renderVideoBitrate.value,
                 renderStillImageDuration: this.renderStillImageDuration.value,
@@ -334,8 +339,10 @@ export class AppState {
                     titlePosition: this.titlePosition.value,
                     titleFontFamily: this.titleFontFamily.value,
                     vhsDateTimeEnabled: this.vhsDateTimeEnabled.value,
-                    vhsDateTimeMode: this.vhsDateTimeMode.value,
                     vhsDateTimePosition: this.vhsDateTimePosition.value,
+                    vhsDateTimeUseCustom: this.vhsDateTimeUseCustom.value,
+                    vhsCustomDate: this.vhsCustomDate.value,
+                    vhsDateTimeSize: this.vhsDateTimeSize.value,
                 },
                 stillImageDuration: this.renderStillImageDuration.value,
                 stillImageFrameRate: this.stillImageFrameRate.value,
@@ -454,8 +461,10 @@ type SavedState = Partial<{
     titlePosition: TextOverlayPosition,
     titleFontFamily: TitleFontFamily,
     vhsDateTimeEnabled: boolean,
-    vhsDateTimeMode: DateTimeMode,
     vhsDateTimePosition: DateTimePosition,
+    vhsDateTimeUseCustom: boolean,
+    vhsCustomDate: string,
+    vhsDateTimeSize: number,
     renderVideoCodec: AppVideoCodec | null,
     renderVideoBitrate: number,
     renderStillImageDuration: number,
@@ -487,8 +496,10 @@ const loadState = (store: AppState) => {
             'titlePosition',
             'titleFontFamily',
             'vhsDateTimeEnabled',
-            'vhsDateTimeMode',
             'vhsDateTimePosition',
+            'vhsDateTimeUseCustom',
+            'vhsCustomDate',
+            'vhsDateTimeSize',
             'renderVideoCodec',
             'renderVideoBitrate',
             'renderStillImageDuration',

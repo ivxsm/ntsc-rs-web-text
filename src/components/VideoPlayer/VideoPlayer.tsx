@@ -60,8 +60,10 @@ const VideoPlayer = () => {
                     titlePosition: appState.titlePosition.value,
                     titleFontFamily: appState.titleFontFamily.value,
                     vhsDateTimeEnabled: appState.vhsDateTimeEnabled.value,
-                    vhsDateTimeMode: appState.vhsDateTimeMode.value,
                     vhsDateTimePosition: appState.vhsDateTimePosition.value,
+                    vhsDateTimeUseCustom: appState.vhsDateTimeUseCustom.value,
+                    vhsCustomDate: appState.vhsCustomDate.value,
+                    vhsDateTimeSize: appState.vhsDateTimeSize.value,
                 }, appState.stillImageFrameRate.value))
                 .then(player => {
                     mediaPlayer.value = {state: 'loaded', player};
@@ -659,10 +661,12 @@ const VideoPaneInner = ({player}: {player: MediaPlayer}) => {
     useLayoutEffect(() => {
         player.vhsDateTimeSettings = {
             vhsDateTimeEnabled: appState.vhsDateTimeEnabled.value,
-            vhsDateTimeMode: appState.vhsDateTimeMode.value,
             vhsDateTimePosition: appState.vhsDateTimePosition.value,
+            vhsDateTimeUseCustom: appState.vhsDateTimeUseCustom.value,
+            vhsCustomDate: appState.vhsCustomDate.value,
+            vhsDateTimeSize: appState.vhsDateTimeSize.value,
         };
-    }, [appState.vhsDateTimeEnabled.value, appState.vhsDateTimeMode.value, appState.vhsDateTimePosition.value]);
+    }, [appState.vhsDateTimeEnabled.value, appState.vhsDateTimePosition.value, appState.vhsDateTimeUseCustom.value, appState.vhsCustomDate.value, appState.vhsDateTimeSize.value]);
 
     const viewportSize = useRef({blockSize: 0, inlineSize: 0});
     const resizeCanvas = useCallback(() => {

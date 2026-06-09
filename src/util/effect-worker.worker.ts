@@ -19,7 +19,6 @@ import vcrFontUrl from '../assets/fonts/VCR_OSD_MONO_1.001.ttf';
 
 export type TextOverlayPosition = 'center' | 'top' | 'bottom';
 export type TitleFontFamily = 't-serif-light' | 't-serif-bold' | 't-serif-black' | 't-display-light' | 't-display-bold' | 't-display-black';
-export type DateTimeMode = 'both' | 'date-only' | 'time-only';
 export type DateTimePosition = 'bottom-right' | 'bottom-left';
 
 export type RenderFrame = {
@@ -43,8 +42,10 @@ export type RenderFrame = {
     titlePosition: TextOverlayPosition,
     titleFontFamily: TitleFontFamily,
     vhsDateTimeEnabled: boolean,
-    vhsDateTimeMode: DateTimeMode,
     vhsDateTimePosition: DateTimePosition,
+    vhsDateTimeUseCustom: boolean,
+    vhsCustomDate: string,
+    vhsDateTimeSize: number,
 };
 
 export type WorkerSchema =
@@ -239,7 +240,7 @@ export type Formats = {
 };
 
 const renderFrame = async<F extends keyof Formats>(
-    {frame, rotation, resizeHeight, resizeFilter, effectEnabled, frameNum, padToEven, outputRect, titleEnabled, titleText, titleDuration, titleFontSize, titlePosition, titleFontFamily, vhsDateTimeEnabled, vhsDateTimeMode, vhsDateTimePosition}: RenderFrame,
+    {frame, rotation, resizeHeight, resizeFilter, effectEnabled, frameNum, padToEven, outputRect, titleEnabled, titleText, titleDuration, titleFontSize, titlePosition, titleFontFamily, vhsDateTimeEnabled, vhsDateTimePosition, vhsDateTimeUseCustom, vhsCustomDate, vhsDateTimeSize}: RenderFrame,
     format: F,
 ): Promise<Formats[F]> => {
     checkEffectData(effectData);
@@ -369,52 +370,45 @@ const renderFrame = async<F extends keyof Formats>(
         }
 
         if (vhsDateTimeEnabled) {
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('en-GB', {
-                day: '2-digit', month: '2-digit', year: 'numeric',
-            }).replace(/\//g, '-');
-            const timeStr = now.toLocaleTimeString('en-GB', {
-                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
-            });
-
-            const lines: string[] = [];
-            if (vhsDateTimeMode === 'both' || vhsDateTimeMode === 'date-only') lines.push(dateStr);
-            if (vhsDateTimeMode === 'both' || vhsDateTimeMode === 'time-only') lines.push(timeStr);
-
-            if (lines.length > 0) {
-                const canvas = new OffscreenCanvas(frameW, frameH);
-                const ctx = canvas.getContext('2d')!;
-                const imageData = new ImageData(dstFrameClamped, frameW, frameH);
-                ctx.putImageData(imageData, 0, 0);
-
-                const fontSize = Math.max(14, Math.round(frameH * 0.035));
-                const lineHeight = fontSize * 1.2;
-                const padding = Math.round(frameH * 0.02);
-
-                ctx.font = `${fontSize}px 'VCR OSD Mono', monospace`;
-                ctx.textBaseline = 'bottom';
-                ctx.shadowColor = 'black';
-                ctx.shadowBlur = Math.round(fontSize * 0.2);
-                ctx.fillStyle = 'white';
-
-                let x: number;
-                if (vhsDateTimePosition === 'bottom-left') {
-                    ctx.textAlign = 'left';
-                    x = padding;
-                } else {
-                    ctx.textAlign = 'right';
-                    x = frameW - padding;
-                }
-
-                let y = frameH - padding;
-                for (let i = lines.length - 1; i >= 0; i--) {
-                    ctx.fillText(lines[i], x, y, frameW - padding * 2);
-                    y -= lineHeight;
-                }
-
-                const imageDataOut = ctx.getImageData(0, 0, frameW, frameH);
-                dstFrameClamped = imageDataOut.data;
+            let dateStr: string;
+            if (vhsDateTimeUseCustom) {
+                const [y, m, d] = vhsCustomDate.split('-');
+                dateStr = `${y}-${m}-${d}`;
+            } else {
+                const now = new Date();
+                const y = String(now.getFullYear());
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                const d = String(now.getDate()).padStart(2, '0');
+                dateStr = `${y}-${m}-${d}`;
             }
+
+            const canvas = new OffscreenCanvas(frameW, frameH);
+            const ctx = canvas.getContext('2d')!;
+            const imageData = new ImageData(dstFrameClamped, frameW, frameH);
+            ctx.putImageData(imageData, 0, 0);
+
+            const fontSize = Math.max(10, Math.round(frameH * vhsDateTimeSize / 1000));
+            const padding = Math.round(frameH * 0.02);
+
+            ctx.font = `${fontSize}px 'VCR OSD Mono', monospace`;
+            ctx.textBaseline = 'bottom';
+            ctx.shadowColor = 'black';
+            ctx.shadowBlur = Math.round(fontSize * 0.2);
+            ctx.fillStyle = 'white';
+
+            let x: number;
+            if (vhsDateTimePosition === 'bottom-left') {
+                ctx.textAlign = 'left';
+                x = padding;
+            } else {
+                ctx.textAlign = 'right';
+                x = frameW - padding;
+            }
+
+            ctx.fillText(dateStr, x, frameH - padding, frameW - padding * 2);
+
+            const imageDataOut = ctx.getImageData(0, 0, frameW, frameH);
+            dstFrameClamped = imageDataOut.data;
         }
 
         switch (format) {

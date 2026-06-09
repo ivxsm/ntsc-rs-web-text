@@ -4,7 +4,7 @@ import RpcDispatcher from './worker-rpc';
 import {ResizeFilter, Rotation} from '../../ntsc-rs-web-wrapper/build/ntsc_rs_web_wrapper';
 import {wasmModulePromise} from './ntsc-rs-module';
 import {TypedEvent, TypedEventTarget} from './typed-events';
-import type {TextOverlayPosition, TitleFontFamily, DateTimeMode, DateTimePosition} from '../app-state';
+import type {TextOverlayPosition, TitleFontFamily, DateTimePosition} from '../app-state';
 
 export type EffectWorker = RpcDispatcher<WorkerSchema>;
 
@@ -43,8 +43,10 @@ export type RenderFrameSettings = {
     titlePosition: TextOverlayPosition,
     titleFontFamily: TitleFontFamily,
     vhsDateTimeEnabled: boolean,
-    vhsDateTimeMode: DateTimeMode,
     vhsDateTimePosition: DateTimePosition,
+    vhsDateTimeUseCustom: boolean,
+    vhsCustomDate: string,
+    vhsDateTimeSize: number,
 };
 
 export class PanicEvent extends TypedEvent<'panic'> {
@@ -175,8 +177,10 @@ export default class EffectWorkerPool extends TypedEventTarget<PanicEvent> {
                 titlePosition: settings.titlePosition,
                 titleFontFamily: settings.titleFontFamily,
                 vhsDateTimeEnabled: settings.vhsDateTimeEnabled,
-                vhsDateTimeMode: settings.vhsDateTimeMode,
                 vhsDateTimePosition: settings.vhsDateTimePosition,
+                vhsDateTimeUseCustom: settings.vhsDateTimeUseCustom,
+                vhsCustomDate: settings.vhsCustomDate,
+                vhsDateTimeSize: settings.vhsDateTimeSize,
             }, [settings.frame]);
             await waitForRelease;
             return renderedFrame as Formats[F];

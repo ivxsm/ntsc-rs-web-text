@@ -119,7 +119,7 @@ class PresentationLoop extends TypedEventTarget<PresentEvent | DoneEvent> {
     }
 }
 
-import type {TextOverlayPosition, TitleFontFamily, DateTimeMode, DateTimePosition} from '../app-state';
+import type {TextOverlayPosition, TitleFontFamily, DateTimePosition} from '../app-state';
 
 export type PipelineSettings = {
     resizeHeight: number | null;
@@ -139,8 +139,10 @@ export type PipelineSettings = {
     titlePosition: TextOverlayPosition;
     titleFontFamily: TitleFontFamily;
     vhsDateTimeEnabled: boolean;
-    vhsDateTimeMode: DateTimeMode;
     vhsDateTimePosition: DateTimePosition;
+    vhsDateTimeUseCustom: boolean;
+    vhsCustomDate: string;
+    vhsDateTimeSize: number;
 };
 
 export default class MediaPlayer extends TypedEventTarget<FrameEvent | StateChangeEvent | CanvasResizeEvent> {
@@ -316,20 +318,26 @@ export default class MediaPlayer extends TypedEventTarget<FrameEvent | StateChan
     get vhsDateTimeSettings() {
         return {
             vhsDateTimeEnabled: this.pipelineSettings.vhsDateTimeEnabled,
-            vhsDateTimeMode: this.pipelineSettings.vhsDateTimeMode,
             vhsDateTimePosition: this.pipelineSettings.vhsDateTimePosition,
+            vhsDateTimeUseCustom: this.pipelineSettings.vhsDateTimeUseCustom,
+            vhsCustomDate: this.pipelineSettings.vhsCustomDate,
+            vhsDateTimeSize: this.pipelineSettings.vhsDateTimeSize,
         };
     }
 
     set vhsDateTimeSettings(settings: {
         vhsDateTimeEnabled: boolean,
-        vhsDateTimeMode: DateTimeMode,
         vhsDateTimePosition: DateTimePosition,
+        vhsDateTimeUseCustom: boolean,
+        vhsCustomDate: string,
+        vhsDateTimeSize: number,
     }) {
         if (
             this.pipelineSettings.vhsDateTimeEnabled === settings.vhsDateTimeEnabled &&
-            this.pipelineSettings.vhsDateTimeMode === settings.vhsDateTimeMode &&
-            this.pipelineSettings.vhsDateTimePosition === settings.vhsDateTimePosition
+            this.pipelineSettings.vhsDateTimePosition === settings.vhsDateTimePosition &&
+            this.pipelineSettings.vhsDateTimeUseCustom === settings.vhsDateTimeUseCustom &&
+            this.pipelineSettings.vhsCustomDate === settings.vhsCustomDate &&
+            this.pipelineSettings.vhsDateTimeSize === settings.vhsDateTimeSize
         ) return;
         Object.assign(this.pipelineSettings, settings);
         void this.reRender();
