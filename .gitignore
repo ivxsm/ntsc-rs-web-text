@@ -26,3 +26,6 @@ dev-dist
 
 # mkcert local dev certs
 *.pem
+
+# Environment variables
+.env
