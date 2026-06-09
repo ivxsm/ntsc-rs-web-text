@@ -3,7 +3,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build",
+		"build": "vite build && cp dist/index.html dist/404.html",
 		"preview": "vite preview",
 		"lint": "eslint",
 		"build-aac-codec": "docker build -t ntsc_rs_web_aac ./aac-codec && docker run --rm -v ./aac-codec:/src -u $(id -u):$(id -g) -it ntsc_rs_web_aac /bin/bash -c 'cd /src && ./build.sh'"
