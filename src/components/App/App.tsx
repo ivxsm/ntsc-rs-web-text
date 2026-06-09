@@ -98,7 +98,7 @@ const App = () => {
                     {
                         id: 'vhs-datetime',
                         panel: <VhsDateTimePane />,
-                        title: 'Date/Time',
+                        title: 'Date',
                     },
                     {
                         id: 'render-settings',

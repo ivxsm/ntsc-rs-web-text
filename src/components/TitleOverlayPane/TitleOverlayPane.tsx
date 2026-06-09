@@ -28,7 +28,7 @@ const TitleOverlayPane = () => {
                 <CheckboxToggle label="Enable title overlay" checked={titleEnabled} />
                 <div className={style.setting}>
                     <TextBox value={titleText} placeholder="Enter title text..." disabled={!titleEnabled.value} />
-                    <div className={style.settingLabel}>Duration</div>
+                    <div className={style.settingLabel}>Text</div>
                 </div>
                 <div className={style.setting}>
                     <SliderWithSpinBox
@@ -37,7 +37,7 @@ const TitleOverlayPane = () => {
                         max={10}
                         step={0.5}
                     />
-                    <div className={style.settingLabel}>Text</div>
+                    <div className={style.settingLabel}>Duration</div>
                 </div>
                 <div className={style.setting}>
                     <SliderWithSpinBox
