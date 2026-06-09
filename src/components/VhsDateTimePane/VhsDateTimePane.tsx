@@ -15,10 +15,8 @@ const VhsDateTimePane = () => {
     return (
         <div className={style.dateTimePane}>
             <div className={style.dateTimeSettings}>
-                <CheckboxToggle label="Enable VHS date" checked={vhsDateTimeEnabled} />
                 <div className={style.setting}>
-                    <Dropdown value={vhsDateTimePosition} options={positionOptions} />
-                    <div className={style.settingLabel}>Position</div>
+                    <CheckboxToggle className={style.checkbox} label="Enable VHS date" checked={vhsDateTimeEnabled} />
                 </div>
                 <div className={style.setting}>
                     <SliderWithSpinBox
@@ -28,6 +26,10 @@ const VhsDateTimePane = () => {
                         step={1}
                     />
                     <div className={style.settingLabel}>Size</div>
+                </div>
+                <div className={style.setting}>
+                    <Dropdown value={vhsDateTimePosition} options={positionOptions} />
+                    <div className={style.settingLabel}>Position</div>
                 </div>
                 <CheckboxToggle label="Use custom date" checked={vhsDateTimeUseCustom} />
                 {vhsDateTimeUseCustom.value && <>
