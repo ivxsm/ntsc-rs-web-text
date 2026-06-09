@@ -18,6 +18,7 @@ const AboutModal = ({
             title="ntsc-rs (web version)"
         >
             <p>
+
                 by <a href="https://github.com/valadaptive/">valadaptive</a>
             </p>
             <p>
@@ -28,6 +29,9 @@ const AboutModal = ({
             </p>
             <p>
                 ...which is a port of <a href="https://github.com/joncampbell123/composite-video-simulator/">joncampbell123/composite-video-simulator</a>
+            </p>
+            <p>
+                This is an edited version that adds the ability to overlay custom title text on your videos + date .
             </p>
             <p>
                 For the desktop version (with lossless output, interlaced video support, faster rendering, and more), visit <a

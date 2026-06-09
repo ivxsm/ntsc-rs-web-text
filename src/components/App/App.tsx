@@ -63,7 +63,7 @@ const App = () => {
             {
                 id: 'github',
                 label: 'GitHub',
-                href: 'https://github.com/ntsc-rs/ntsc-rs-web',
+                href: 'https://github.com/ivxsm/ntsc-rs-web-text',
             },
         ];
     }, []);
