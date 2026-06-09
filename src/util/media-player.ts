@@ -119,7 +119,7 @@ class PresentationLoop extends TypedEventTarget<PresentEvent | DoneEvent> {
     }
 }
 
-import type {TextOverlayPosition, TitleFontFamily} from '../app-state';
+import type {TextOverlayPosition, TitleFontFamily, DateTimeMode, DateTimePosition} from '../app-state';
 
 export type PipelineSettings = {
     resizeHeight: number | null;
@@ -138,6 +138,9 @@ export type PipelineSettings = {
     titleFontSize: number;
     titlePosition: TextOverlayPosition;
     titleFontFamily: TitleFontFamily;
+    vhsDateTimeEnabled: boolean;
+    vhsDateTimeMode: DateTimeMode;
+    vhsDateTimePosition: DateTimePosition;
 };
 
 export default class MediaPlayer extends TypedEventTarget<FrameEvent | StateChangeEvent | CanvasResizeEvent> {
@@ -305,6 +308,28 @@ export default class MediaPlayer extends TypedEventTarget<FrameEvent | StateChan
             this.pipelineSettings.titleFontSize === settings.titleFontSize &&
             this.pipelineSettings.titlePosition === settings.titlePosition &&
             this.pipelineSettings.titleFontFamily === settings.titleFontFamily
+        ) return;
+        Object.assign(this.pipelineSettings, settings);
+        void this.reRender();
+    }
+
+    get vhsDateTimeSettings() {
+        return {
+            vhsDateTimeEnabled: this.pipelineSettings.vhsDateTimeEnabled,
+            vhsDateTimeMode: this.pipelineSettings.vhsDateTimeMode,
+            vhsDateTimePosition: this.pipelineSettings.vhsDateTimePosition,
+        };
+    }
+
+    set vhsDateTimeSettings(settings: {
+        vhsDateTimeEnabled: boolean,
+        vhsDateTimeMode: DateTimeMode,
+        vhsDateTimePosition: DateTimePosition,
+    }) {
+        if (
+            this.pipelineSettings.vhsDateTimeEnabled === settings.vhsDateTimeEnabled &&
+            this.pipelineSettings.vhsDateTimeMode === settings.vhsDateTimeMode &&
+            this.pipelineSettings.vhsDateTimePosition === settings.vhsDateTimePosition
         ) return;
         Object.assign(this.pipelineSettings, settings);
         void this.reRender();

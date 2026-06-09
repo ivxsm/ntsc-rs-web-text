@@ -1,0 +1,29 @@
+.date-time-pane {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+.date-time-settings {
+    overflow: auto;
+    display: grid;
+    padding: var(--pane-padding);
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    align-items: center;
+}
+
+.setting {
+    display: contents;
+
+    &:has(.checkbox) {
+        > * {
+            grid-column: 1 / -1;
+        }
+    }
+}
+
+.setting-label {
+    font-size: 0.9rem;
+}

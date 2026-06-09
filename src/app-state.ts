@@ -49,6 +49,8 @@ export type PresetsState = {
 
 export type TextOverlayPosition = 'center' | 'top' | 'bottom';
 export type TitleFontFamily = 't-serif-light' | 't-serif-bold' | 't-serif-black' | 't-display-light' | 't-display-bold' | 't-display-black';
+export type DateTimeMode = 'both' | 'date-only' | 'time-only';
+export type DateTimePosition = 'bottom-right' | 'bottom-left';
 
 export type SettingsObj = Record<string, number | boolean>;
 
@@ -90,6 +92,10 @@ export class AppState {
     titleFontSize: Signal<number>;
     titlePosition: Signal<TextOverlayPosition>;
     titleFontFamily: Signal<TitleFontFamily>;
+
+    vhsDateTimeEnabled: Signal<boolean>;
+    vhsDateTimeMode: Signal<DateTimeMode>;
+    vhsDateTimePosition: Signal<DateTimePosition>;
 
     renderVideoCodec: Signal<AppVideoCodec | null>;
     renderVideoBitrate: Signal<number>;
@@ -169,6 +175,10 @@ export class AppState {
         this.titlePosition = signal('center');
         this.titleFontFamily = signal('t-serif-light');
 
+        this.vhsDateTimeEnabled = signal(false);
+        this.vhsDateTimeMode = signal('both');
+        this.vhsDateTimePosition = signal('bottom-right');
+
         this.stillImageFrameRate = signal(30);
         this.renderVideoCodec = signal('avc');
         this.renderVideoBitrate = signal(10);
@@ -217,6 +227,9 @@ export class AppState {
                 titleFontSize: this.titleFontSize.value,
                 titlePosition: this.titlePosition.value,
                 titleFontFamily: this.titleFontFamily.value,
+                vhsDateTimeEnabled: this.vhsDateTimeEnabled.value,
+                vhsDateTimeMode: this.vhsDateTimeMode.value,
+                vhsDateTimePosition: this.vhsDateTimePosition.value,
                 renderVideoCodec: this.renderVideoCodec.value,
                 renderVideoBitrate: this.renderVideoBitrate.value,
                 renderStillImageDuration: this.renderStillImageDuration.value,
@@ -320,6 +333,9 @@ export class AppState {
                     titleFontSize: this.titleFontSize.value,
                     titlePosition: this.titlePosition.value,
                     titleFontFamily: this.titleFontFamily.value,
+                    vhsDateTimeEnabled: this.vhsDateTimeEnabled.value,
+                    vhsDateTimeMode: this.vhsDateTimeMode.value,
+                    vhsDateTimePosition: this.vhsDateTimePosition.value,
                 },
                 stillImageDuration: this.renderStillImageDuration.value,
                 stillImageFrameRate: this.stillImageFrameRate.value,
@@ -437,6 +453,9 @@ type SavedState = Partial<{
     titleFontSize: number,
     titlePosition: TextOverlayPosition,
     titleFontFamily: TitleFontFamily,
+    vhsDateTimeEnabled: boolean,
+    vhsDateTimeMode: DateTimeMode,
+    vhsDateTimePosition: DateTimePosition,
     renderVideoCodec: AppVideoCodec | null,
     renderVideoBitrate: number,
     renderStillImageDuration: number,
@@ -467,6 +486,9 @@ const loadState = (store: AppState) => {
             'titleFontSize',
             'titlePosition',
             'titleFontFamily',
+            'vhsDateTimeEnabled',
+            'vhsDateTimeMode',
+            'vhsDateTimePosition',
             'renderVideoCodec',
             'renderVideoBitrate',
             'renderStillImageDuration',

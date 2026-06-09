@@ -59,6 +59,9 @@ const VideoPlayer = () => {
                     titleFontSize: appState.titleFontSize.value,
                     titlePosition: appState.titlePosition.value,
                     titleFontFamily: appState.titleFontFamily.value,
+                    vhsDateTimeEnabled: appState.vhsDateTimeEnabled.value,
+                    vhsDateTimeMode: appState.vhsDateTimeMode.value,
+                    vhsDateTimePosition: appState.vhsDateTimePosition.value,
                 }, appState.stillImageFrameRate.value))
                 .then(player => {
                     mediaPlayer.value = {state: 'loaded', player};
@@ -653,6 +656,13 @@ const VideoPaneInner = ({player}: {player: MediaPlayer}) => {
             titleFontFamily: appState.titleFontFamily.value,
         };
     }, [appState.titleEnabled.value, appState.titleText.value, appState.titleDuration.value, appState.titleFontSize.value, appState.titlePosition.value, appState.titleFontFamily.value]);
+    useLayoutEffect(() => {
+        player.vhsDateTimeSettings = {
+            vhsDateTimeEnabled: appState.vhsDateTimeEnabled.value,
+            vhsDateTimeMode: appState.vhsDateTimeMode.value,
+            vhsDateTimePosition: appState.vhsDateTimePosition.value,
+        };
+    }, [appState.vhsDateTimeEnabled.value, appState.vhsDateTimeMode.value, appState.vhsDateTimePosition.value]);
 
     const viewportSize = useRef({blockSize: 0, inlineSize: 0});
     const resizeCanvas = useCallback(() => {

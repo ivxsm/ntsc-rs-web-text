@@ -7,6 +7,7 @@ import SettingsPane from '../SettingsList/SettingsList';
 import TabbedPanel from '../TabbedPanel/TabbedPanel';
 import RenderSettingsPane from '../RenderSettingsPane/RenderSettingsPane';
 import TitleOverlayPane from '../TitleOverlayPane/TitleOverlayPane';
+import VhsDateTimePane from '../VhsDateTimePane/VhsDateTimePane';
 import ResizablePanel from '../ResizablePanel/ResizablePanel';
 import DisclaimerModal from '../DisclaimerModal/DisclaimerModal';
 import {useAppState} from '../../app-state';
@@ -92,7 +93,12 @@ const App = () => {
                     {
                         id: 'title',
                         panel: <TitleOverlayPane />,
-                        title: 'Title',
+                        title: 'Text',
+                    },
+                    {
+                        id: 'vhs-datetime',
+                        panel: <VhsDateTimePane />,
+                        title: 'Date/Time',
                     },
                     {
                         id: 'render-settings',

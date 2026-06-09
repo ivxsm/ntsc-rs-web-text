@@ -69,3 +69,11 @@
   font-weight: 900;
   src: url('../assets/fonts/thmanyahseriftext-Black.otf') format('opentype');
 }
+
+@font-face {
+  font-display: swap;
+  font-family: 'VCR OSD Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../assets/fonts/VCR_OSD_MONO_1.001.ttf') format('truetype');
+}
