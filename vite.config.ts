@@ -37,7 +37,7 @@ type CreditsLicense = {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    base: '/ntsc-rs-web-text/',
+    base: '/',
     plugins: [
         preact(),
         wasm() as Plugin,
