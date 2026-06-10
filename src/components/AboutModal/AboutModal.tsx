@@ -18,20 +18,22 @@ const AboutModal = ({
             title="ntsc-rs (web version)"
         >
             <p>
-
-                by <a href="https://github.com/valadaptive/">valadaptive</a>
+                Modified by <a href="https://github.com/ivxsm" target="_blank" rel="noopener noreferrer">Khaled</a>
+            </p>
+            <p style={{ paddingLeft: '1.5rem', fontStyle: 'italic' }}>
+                Added the ability to overlay custom title text on your videos + date.
             </p>
             <p>
-                ...loosely based on <a href="https://github.com/JargeZ/ntscqt/">JargeZ/ntscqt</a>
+                Originally by <a href="https://github.com/valadaptive/" target="_blank" rel="noopener noreferrer">valadaptive</a>
             </p>
             <p>
-                ...which is a GUI for <a href="https://github.com/zhuker/ntsc/">zhuker/ntsc</a>
+                ...loosely based on <a href="https://github.com/JargeZ/ntscqt/" target="_blank" rel="noopener noreferrer">JargeZ/ntscqt</a>
             </p>
             <p>
-                ...which is a port of <a href="https://github.com/joncampbell123/composite-video-simulator/">joncampbell123/composite-video-simulator</a>
+                ...which is a GUI for <a href="https://github.com/zhuker/ntsc/" target="_blank" rel="noopener noreferrer">zhuker/ntsc</a>
             </p>
             <p>
-                This is an edited version that adds the ability to overlay custom title text on your videos + date .
+                ...which is a port of <a href="https://github.com/joncampbell123/composite-video-simulator/" target="_blank" rel="noopener noreferrer">joncampbell123/composite-video-simulator</a>
             </p>
             <p>
                 For the desktop version (with lossless output, interlaced video support, faster rendering, and more), visit <a

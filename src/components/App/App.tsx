@@ -56,11 +56,6 @@ const App = () => {
                 onClick: openDisclaimer,
             },
             {
-                id: 'home',
-                label: 'Homepage',
-                href: 'https://ntsc.rs',
-            },
-            {
                 id: 'github',
                 label: 'GitHub',
                 href: 'https://github.com/ivxsm/ntsc-rs-web-text',

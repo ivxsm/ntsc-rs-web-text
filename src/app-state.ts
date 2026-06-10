@@ -111,7 +111,7 @@ export class AppState {
     private isUndoing = true;
 
     isPortrait: ReadonlySignal<boolean>;
-    disclaimerModalOpen = signal(true);
+    disclaimerModalOpen = signal(false);
     disclaimerModalDismissed = signal(false);
     panicMessage: Signal<string | null> = signal(null);
 
@@ -509,8 +509,6 @@ const loadState = (store: AppState) => {
                 store[key].value = savedState[key];
             }
         }
-
-        store.disclaimerModalOpen.value = !store.disclaimerModalDismissed.value;
     } catch (err) {
         // Swallow errors here
         // eslint-disable-next-line no-console

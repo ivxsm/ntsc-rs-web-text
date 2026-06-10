@@ -1,28 +1,33 @@
-# ntsc-rs-web
+# ntsc-rs (Web Edition)
 
-This is the (experimental) web version of [ntsc-rs](https://github.com/ntsc-rs/ntsc-rs). It uses Preact, and is built via Vite.
+This is an experimental, browser-based version of [ntsc-rs](https://github.com/ntsc-rs/ntsc-rs), a video effects application that simulates NTSC/VHS composite video signals. It runs entirely clientside in the browser using Preact and Vite.
 
-Based on [ntsc-rs-web](https://github.com/ntsc-rs/ntsc-rs-web).
+This version is based on [valadaptive's ntsc-rs-web](https://github.com/ntsc-rs/ntsc-rs-web).
 
-## What I added
+---
 
-- **Text overlay** — custom title text burned into video frames (Text tab): enable/disable, text input, duration, font size, position (center/top/bottom), and six Thmanyah serif font choices
-- **VHS date stamp** — retro date overlay (Date tab): enable/disable, bottom-left/right position, size slider, optional custom date (defaults to today)
+## Additional Features
 
-Overlays are drawn in the effect worker via canvas after the NTSC pass (`src/util/effect-worker.worker.ts`).
+This fork includes custom styling and overlay capabilities to personalize your VHS/NTSC video outputs:
 
-## Building
+- **Text Overlay (Text tab)**: Burn a custom title card/text directly into the video frames.
+  - Features: Enable/disable toggle, custom text input, display duration, font size control, position alignment (center, top, or bottom), and six Thmanyah serif font options.
+- **VHS Date Stamp (Date tab)**: Adds a retro-style VHS date overlay to the video.
+  - Features: Enable/disable toggle, positioning (bottom-left or bottom-right), size slider, and custom date selector (defaults to current date).
 
-To run a development server:
 
-```
+## Getting Started
+
+### Run Development Server
+
+To run the application locally for development with hot module reloading:
+
+```bash
 npm run dev
 ```
 
+### Build for Production
 
-To build into `dist`:
-
-
-```
+```bash
 npm run build
 ```
