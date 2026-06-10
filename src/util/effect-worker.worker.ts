@@ -111,36 +111,6 @@ let effectData: Promise<{
     memory: WebAssembly.Memory,
 }> | null = null;
 
-let useCanvasFallback = false;
-let fallbackCanvas: OffscreenCanvas | null = null;
-let fallbackCtx: OffscreenCanvasRenderingContext2D | null = null;
-
-async function detectCopyToIssues(): Promise<void> {
-    try {
-        const testCanvas = new OffscreenCanvas(1, 1);
-        const testCtx = testCanvas.getContext('2d')!;
-        testCtx.fillStyle = '#ff0000';
-        testCtx.fillRect(0, 0, 1, 1);
-        const testFrame = new VideoFrame(testCanvas, {timestamp: 0});
-        try {
-            const allocSize = testFrame.allocationSize({format: 'RGBX'});
-            const buf = new ArrayBuffer(allocSize);
-            const layout = await testFrame.copyTo(buf, {format: 'RGBX'});
-            const pixels = new Uint8Array(buf, layout[0].offset);
-            if (pixels[0] < 128 && pixels[2] > 128) {
-                useCanvasFallback = true;
-            }
-            if (layout[0].stride !== 4) {
-                useCanvasFallback = true;
-            }
-        } finally {
-            testFrame.close();
-        }
-    } catch {
-        useCanvasFallback = true;
-    }
-}
-
 function checkEffectData(effectData: Promise<{
     effect: NtscEffectBuf,
     settingsList: NtscSettingsList,
@@ -189,7 +159,6 @@ const listener = async(event: MessageEvent) => {
                     };
                 })();
                 await effectData;
-                await detectCopyToIssues();
                 postMessageFromWorker<WorkerSchema>({
                     type: 'initialized',
                     message: null,
@@ -289,39 +258,18 @@ const renderFrame = async<F extends keyof Formats>(
             outputHeight = visibleRect.height;
         }
         const sourceFrameWasm = effect.inputBuffer(visibleRect.width, visibleRect.height);
-        if (useCanvasFallback) {
-            if (!fallbackCanvas || fallbackCanvas.width !== visibleRect.width || fallbackCanvas.height !== visibleRect.height) {
-                fallbackCanvas = new OffscreenCanvas(visibleRect.width, visibleRect.height);
-                fallbackCtx = fallbackCanvas.getContext('2d', {colorSpace: 'srgb'}) as OffscreenCanvasRenderingContext2D;
-            }
-            fallbackCtx!.drawImage(frame, 0, 0, visibleRect.width, visibleRect.height);
-            const imageData = fallbackCtx!.getImageData(0, 0, visibleRect.width, visibleRect.height);
-            sourceFrameWasm.set(imageData.data);
-        } else {
-            const rowBytes = visibleRect.width * 4;
-            const copyOpts = {
-                format: 'RGBX' as const,
-                colorSpace: 'srgb' as const,
-                rect: {x: visibleRect.x, y: visibleRect.y, width: visibleRect.width, height: visibleRect.height},
-            };
-            const allocSize = frame.allocationSize(copyOpts);
-            const expectedSize = rowBytes * visibleRect.height;
-            if (allocSize === expectedSize) {
-                await frame.copyTo(sourceFrameWasm, copyOpts);
-            } else {
-                const tempBuf = new ArrayBuffer(allocSize);
-                const layout = await frame.copyTo(tempBuf, copyOpts);
-                const stride = layout[0].stride;
-                const offset = layout[0].offset;
-                const src = new Uint8Array(tempBuf);
-                for (let y = 0; y < visibleRect.height; y++) {
-                    sourceFrameWasm.set(
-                        src.subarray(offset + y * stride, offset + y * stride + rowBytes),
-                        y * rowBytes,
-                    );
-                }
-            }
-        }
+        // For some stupid reason, this method is async! Why is a simple colorspace conversion async? The committee
+        // says so, so it must be! Sync bad, async good! Race conditions are muuuuuch better than two frames of
+        // jank! Async good, jank bad! Never mind that the WebAssembly memory might be invalidated by the time we're
+        // *finished copying into it* by some other WASM method being called, and the only way to work around this
+        // is to disallow *any* other WASM calls while we're busy doing a glorified memcpy asynchronously, or
+        // introduce *another* intermediate array copy that the web committees all seem to pretend are completely
+        // free. The best part, get this, drawing to a canvas is completely synchronous! Oh, that means we *could*
+        // use `getImageData` to do things entirely synchronously, but that results in another intermediate copy and
+        // Firefox now RANDOMIZES the pixel data for security-theater reasons. I greatly look forward to debugging a
+        // bajillion different race conditions because the committees who design these APIs never have to actually
+        // use them.
+        await frame.copyTo(sourceFrameWasm, {format: 'RGBX', colorSpace: 'srgb'});
         // The rect must be in post-rotation coordinates because the Rust pipeline applies the effect after rotation.
         // 90/270-deg rotations swap width and height.
         const rotationSwaps = rotation === Rotation.Cw90 || rotation === Rotation.Cw270;
