@@ -36,7 +36,7 @@
     - [ ] Make "Resize to" apply to logically-vertical axis
   - [x] Negative audio timestamps cause muxer errors
   - [ ] Variable framerate? :(
-- [ ] Test in Safari
+- [ ] Test in Safari (does not work..)
 - [x] Drag and drop presets
 - [x] PWA
   - [x] The "Ready to work offline" prompt could be off-putting if displayed the first time the user loads the app
