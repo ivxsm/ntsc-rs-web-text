@@ -257,7 +257,7 @@ const renderFrame = async<F extends keyof Formats>(
             outputWidth = visibleRect.width;
             outputHeight = visibleRect.height;
         }
-        const sourceFrameWasm = effect.inputBuffer(visibleRect.width, visibleRect.height);
+        let sourceFrameWasm = effect.inputBuffer(visibleRect.width, visibleRect.height);
         // For some stupid reason, this method is async! Why is a simple colorspace conversion async? The committee
         // says so, so it must be! Sync bad, async good! Race conditions are muuuuuch better than two frames of
         // jank! Async good, jank bad! Never mind that the WebAssembly memory might be invalidated by the time we're
@@ -269,7 +269,33 @@ const renderFrame = async<F extends keyof Formats>(
         // Firefox now RANDOMIZES the pixel data for security-theater reasons. I greatly look forward to debugging a
         // bajillion different race conditions because the committees who design these APIs never have to actually
         // use them.
-        await frame.copyTo(sourceFrameWasm, {format: 'RGBX', colorSpace: 'srgb'});
+        // On iOS Safari, calling copyTo with format conversion options crashes or is ignored.
+        // We call copyTo without conversion options (which copies the frame's native layout reliably)
+        // and handle format and stride conversion in WebAssembly.
+        let layouts;
+        try {
+            layouts = await frame.copyTo(sourceFrameWasm);
+        } catch (e) {
+            if (e instanceof RangeError || (e && typeof e === 'object' && 'name' in e && e.name === 'RangeError')) {
+                // If it failed because the raw buffer was too small (due to large strides or padding),
+                // resize it to 8 bytes per pixel (way larger than any layout would need) and retry.
+                const requiredSize = visibleRect.width * visibleRect.height * 8;
+                sourceFrameWasm = effect.resizeRawBuffer(requiredSize);
+                layouts = await frame.copyTo(sourceFrameWasm);
+            } else {
+                throw e;
+            }
+        }
+
+        effect.convertInputFormat(
+            visibleRect.width,
+            visibleRect.height,
+            frame.format ?? 'RGBA',
+            new Uint32Array(layouts.map(l => l.offset)),
+            new Uint32Array(layouts.map(l => l.stride)),
+            frame.colorSpace?.matrix ?? 'bt709',
+            frame.colorSpace?.fullRange ?? false
+        );
         // The rect must be in post-rotation coordinates because the Rust pipeline applies the effect after rotation.
         // 90/270-deg rotations swap width and height.
         const rotationSwaps = rotation === Rotation.Cw90 || rotation === Rotation.Cw270;

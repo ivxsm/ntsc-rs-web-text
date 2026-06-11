@@ -8,6 +8,10 @@ wasm-bindgen --target web --out-dir build --omit-default-module-path target/wasm
 wasm-bindgen --target web --out-dir build/relaxed --omit-default-module-path target/wasm32-unknown-unknown/release-relaxed-simd/ntsc_rs_web_wrapper.wasm
 wasm-opt -O4 build/ntsc_rs_web_wrapper_bg.wasm -o build/ntsc_rs_web_wrapper_bg.wasm
 wasm-opt -O4 build/relaxed/ntsc_rs_web_wrapper_bg.wasm -o build/ntsc_rs_web_wrapper_relaxed_bg.wasm
-cargo about generate --format=json -o build/about.json
+if command -v cargo-about &> /dev/null; then
+    cargo about generate --format=json -o build/about.json
+else
+    echo '{"overview":[],"licenses":[],"crates":[]}' > build/about.json
+fi
 node gen-settings-list.mjs
 cp generated/setting-descriptors.ts build/

@@ -43,6 +43,7 @@ pub struct NtscEffectBuf {
     effect: NtscEffect,
     resizer: Resizer,
     src: Box<[u8]>,
+    raw_src: Box<[u8]>,
     effect_buf: Box<[f32]>,
     resize_dst: Box<[u8]>,
     rotate_dst: Box<[u8]>,
@@ -84,13 +85,255 @@ impl NtscEffectBuf {
         self.effect = settings.0.into();
     }
 
-    /// Get a pointer to the input/source buffer. This is what the effect will read from, and what you should write to.
+    /// Get a pointer to the raw input/source buffer. This is what the effect will read from, and what you should write to.
     #[wasm_bindgen(js_name = "inputBuffer")]
     pub fn input_buffer(&mut self, width: usize, height: usize) -> Uint8Array {
         let new_len = width * height * 4;
+        maybe_resize(&mut self.raw_src, new_len);
         maybe_resize(&mut self.src, new_len);
         self.input_dimensions = (width, height);
-        unsafe { Uint8Array::view_mut_raw(self.src.as_mut_ptr(), self.src.len()) }
+        unsafe { Uint8Array::view_mut_raw(self.raw_src.as_mut_ptr(), self.raw_src.len()) }
+    }
+
+    /// Resize the raw input buffer to a larger size if needed.
+    #[wasm_bindgen(js_name = "resizeRawBuffer")]
+    pub fn resize_raw_buffer(&mut self, new_len: usize) -> Uint8Array {
+        maybe_resize(&mut self.raw_src, new_len);
+        unsafe { Uint8Array::view_mut_raw(self.raw_src.as_mut_ptr(), self.raw_src.len()) }
+    }
+
+    /// Convert the raw input buffer to tightly packed RGBX format.
+    #[wasm_bindgen(js_name = "convertInputFormat")]
+    pub fn convert_input_format(
+        &mut self,
+        width: usize,
+        height: usize,
+        format: &str,
+        plane_offsets: &[usize],
+        plane_strides: &[usize],
+        matrix: &str,
+        full_range: bool,
+    ) -> Result<(), String> {
+        if format == "RGBA" || format == "RGBX" {
+            if plane_offsets.is_empty() || plane_strides.is_empty() {
+                return Err("Missing offset or stride for RGBA/RGBX format".to_string());
+            }
+            let stride = plane_strides[0];
+            let offset = plane_offsets[0];
+            let row_bytes = width * 4;
+            if offset + height * stride > self.raw_src.len() {
+                return Err("Plane layout bounds exceeded raw buffer length".to_string());
+            }
+            if stride == row_bytes && offset == 0 {
+                self.src[..row_bytes * height].copy_from_slice(&self.raw_src[..row_bytes * height]);
+            } else {
+                for r in 0..height {
+                    let src_start = offset + r * stride;
+                    let dst_start = r * row_bytes;
+                    self.src[dst_start..dst_start + row_bytes]
+                        .copy_from_slice(&self.raw_src[src_start..src_start + row_bytes]);
+                }
+            }
+            return Ok(());
+        }
+
+        if format == "BGRA" || format == "BGRX" {
+            if plane_offsets.is_empty() || plane_strides.is_empty() {
+                return Err("Missing offset or stride for BGRA/BGRX format".to_string());
+            }
+            let stride = plane_strides[0];
+            let offset = plane_offsets[0];
+            let row_bytes = width * 4;
+            if offset + height * stride > self.raw_src.len() {
+                return Err("Plane layout bounds exceeded raw buffer length".to_string());
+            }
+            for r in 0..height {
+                let src_start = offset + r * stride;
+                let dst_start = r * row_bytes;
+                let src_row = &self.raw_src[src_start..src_start + row_bytes];
+                let dst_row = &mut self.src[dst_start..dst_start + row_bytes];
+                for c in 0..width {
+                    let b = src_row[c * 4];
+                    let g = src_row[c * 4 + 1];
+                    let r_val = src_row[c * 4 + 2];
+                    let a = src_row[c * 4 + 3];
+                    dst_row[c * 4] = r_val;
+                    dst_row[c * 4 + 1] = g;
+                    dst_row[c * 4 + 2] = b;
+                    dst_row[c * 4 + 3] = a;
+                }
+            }
+            return Ok(());
+        }
+
+        if format == "NV12" {
+            if plane_offsets.len() < 2 || plane_strides.len() < 2 {
+                return Err("Missing offsets or strides for NV12 format (requires 2 planes)".to_string());
+            }
+            let y_offset = plane_offsets[0];
+            let y_stride = plane_strides[0];
+            let uv_offset = plane_offsets[1];
+            let uv_stride = plane_strides[1];
+
+            if y_offset + height * y_stride > self.raw_src.len() || uv_offset + (height / 2) * uv_stride > self.raw_src.len() {
+                return Err("NV12 plane layout bounds exceeded raw buffer length".to_string());
+            }
+
+            // Select coefficients based on matrix.
+            // BT.601 / SMPTE 170M vs BT.709.
+            let (cr_r, cb_g, cr_g, cb_b) = if matrix == "bt601" || matrix == "smpte170m" || matrix == "bt470bg" {
+                (1.596027, 0.391762, 0.812968, 2.017232)
+            } else {
+                // Default to BT.709
+                (1.792741, 0.213249, 0.532909, 2.112402)
+            };
+
+            for r in 0..height {
+                let y_row_start = y_offset + r * y_stride;
+                let uv_row_start = uv_offset + (r / 2) * uv_stride;
+                let dst_row_start = r * width * 4;
+
+                for c in 0..width {
+                    let y_val = self.raw_src[y_row_start + c] as f32;
+                    let u_val = self.raw_src[uv_row_start + (c / 2) * 2] as f32 - 128.0;
+                    let v_val = self.raw_src[uv_row_start + (c / 2) * 2 + 1] as f32 - 128.0;
+
+                    let y_norm = if full_range {
+                        y_val
+                    } else {
+                        (y_val - 16.0) * 1.164383
+                    };
+
+                    let red = (y_norm + cr_r * v_val).clamp(0.0, 255.0) as u8;
+                    let green = (y_norm - cb_g * u_val - cr_g * v_val).clamp(0.0, 255.0) as u8;
+                    let blue = (y_norm + cb_b * u_val).clamp(0.0, 255.0) as u8;
+
+                    let pixel_idx = dst_row_start + c * 4;
+                    self.src[pixel_idx] = red;
+                    self.src[pixel_idx + 1] = green;
+                    self.src[pixel_idx + 2] = blue;
+                    self.src[pixel_idx + 3] = 255;
+                }
+            }
+            return Ok(());
+        }
+
+        if format == "I420" {
+            if plane_offsets.len() < 3 || plane_strides.len() < 3 {
+                return Err("Missing offsets or strides for I420 format (requires 3 planes)".to_string());
+            }
+            let y_offset = plane_offsets[0];
+            let y_stride = plane_strides[0];
+            let u_offset = plane_offsets[1];
+            let u_stride = plane_strides[1];
+            let v_offset = plane_offsets[2];
+            let v_stride = plane_strides[2];
+
+            if y_offset + height * y_stride > self.raw_src.len()
+                || u_offset + (height / 2) * u_stride > self.raw_src.len()
+                || v_offset + (height / 2) * v_stride > self.raw_src.len()
+            {
+                return Err("I420 plane layout bounds exceeded raw buffer length".to_string());
+            }
+
+            let (cr_r, cb_g, cr_g, cb_b) = if matrix == "bt601" || matrix == "smpte170m" || matrix == "bt470bg" {
+                (1.596027, 0.391762, 0.812968, 2.017232)
+            } else {
+                (1.792741, 0.213249, 0.532909, 2.112402)
+            };
+
+            for r in 0..height {
+                let y_row_start = y_offset + r * y_stride;
+                let u_row_start = u_offset + (r / 2) * u_stride;
+                let v_row_start = v_offset + (r / 2) * v_stride;
+                let dst_row_start = r * width * 4;
+
+                for c in 0..width {
+                    let y_val = self.raw_src[y_row_start + c] as f32;
+                    let u_val = self.raw_src[u_row_start + (c / 2)] as f32 - 128.0;
+                    let v_val = self.raw_src[v_row_start + (c / 2)] as f32 - 128.0;
+
+                    let y_norm = if full_range {
+                        y_val
+                    } else {
+                        (y_val - 16.0) * 1.164383
+                    };
+
+                    let red = (y_norm + cr_r * v_val).clamp(0.0, 255.0) as u8;
+                    let green = (y_norm - cb_g * u_val - cr_g * v_val).clamp(0.0, 255.0) as u8;
+                    let blue = (y_norm + cb_b * u_val).clamp(0.0, 255.0) as u8;
+
+                    let pixel_idx = dst_row_start + c * 4;
+                    self.src[pixel_idx] = red;
+                    self.src[pixel_idx + 1] = green;
+                    self.src[pixel_idx + 2] = blue;
+                    self.src[pixel_idx + 3] = 255;
+                }
+            }
+            return Ok(());
+        }
+
+        if format == "I420A" {
+            if plane_offsets.len() < 4 || plane_strides.len() < 4 {
+                return Err("Missing offsets or strides for I420A format (requires 4 planes)".to_string());
+            }
+            let y_offset = plane_offsets[0];
+            let y_stride = plane_strides[0];
+            let u_offset = plane_offsets[1];
+            let u_stride = plane_strides[1];
+            let v_offset = plane_offsets[2];
+            let v_stride = plane_strides[2];
+            let a_offset = plane_offsets[3];
+            let a_stride = plane_strides[3];
+
+            if y_offset + height * y_stride > self.raw_src.len()
+                || u_offset + (height / 2) * u_stride > self.raw_src.len()
+                || v_offset + (height / 2) * v_stride > self.raw_src.len()
+                || a_offset + height * a_stride > self.raw_src.len()
+            {
+                return Err("I420A plane layout bounds exceeded raw buffer length".to_string());
+            }
+
+            let (cr_r, cb_g, cr_g, cb_b) = if matrix == "bt601" || matrix == "smpte170m" || matrix == "bt470bg" {
+                (1.596027, 0.391762, 0.812968, 2.017232)
+            } else {
+                (1.792741, 0.213249, 0.532909, 2.112402)
+            };
+
+            for r in 0..height {
+                let y_row_start = y_offset + r * y_stride;
+                let u_row_start = u_offset + (r / 2) * u_stride;
+                let v_row_start = v_offset + (r / 2) * v_stride;
+                let a_row_start = a_offset + r * a_stride;
+                let dst_row_start = r * width * 4;
+
+                for c in 0..width {
+                    let y_val = self.raw_src[y_row_start + c] as f32;
+                    let u_val = self.raw_src[u_row_start + (c / 2)] as f32 - 128.0;
+                    let v_val = self.raw_src[v_row_start + (c / 2)] as f32 - 128.0;
+                    let a_val = self.raw_src[a_row_start + c];
+
+                    let y_norm = if full_range {
+                        y_val
+                    } else {
+                        (y_val - 16.0) * 1.164383
+                    };
+
+                    let red = (y_norm + cr_r * v_val).clamp(0.0, 255.0) as u8;
+                    let green = (y_norm - cb_g * u_val - cr_g * v_val).clamp(0.0, 255.0) as u8;
+                    let blue = (y_norm + cb_b * u_val).clamp(0.0, 255.0) as u8;
+
+                    let pixel_idx = dst_row_start + c * 4;
+                    self.src[pixel_idx] = red;
+                    self.src[pixel_idx + 1] = green;
+                    self.src[pixel_idx + 2] = blue;
+                    self.src[pixel_idx + 3] = a_val;
+                }
+            }
+            return Ok(());
+        }
+
+        Err(format!("Unsupported video pixel format: {}", format))
     }
 
     /// Apply the effect in-place on the contents of the source buffer, writing to and returning
