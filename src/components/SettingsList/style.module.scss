@@ -6,17 +6,26 @@
 }
 
 .settings-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    align-items: center;
     padding: var(--pane-padding);
     overflow: auto;
     flex: 1 1 0;
     scrollbar-gutter: stable;
+
+    &.disabled {
+        color: var(--text-detail);
+    }
 }
 
-.settings-list, .group-box-children {
+.group-box-children {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 1rem;
     align-items: center;
+    padding: 0.75rem 0.75rem 0.75rem 0.5rem;
 
     &.disabled {
         color: var(--text-detail);
@@ -102,10 +111,6 @@
     font-weight: 600;
 }
 
-.group-box-children {
-    padding: 0.75rem 0.75rem 0.75rem 0.5rem;
-}
-
 .checkboxInput {
     margin: 0;
 }
@@ -128,4 +133,40 @@
 
 .resize-dropdown {
     flex: 1 1 0;
+}
+
+.advanced-toggle {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    margin-top: 0.25rem;
+    color: var(--text-detail);
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-top: 1px solid var(--divider);
+    transition: color 0.175s ease;
+
+    &:hover {
+        color: var(--text);
+    }
+}
+
+.advanced-toggle-label {
+    line-height: 1;
+}
+
+.advanced-settings {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    align-items: center;
+    padding-top: 0.5rem;
+
+    &.disabled {
+        color: var(--text-detail);
+    }
 }

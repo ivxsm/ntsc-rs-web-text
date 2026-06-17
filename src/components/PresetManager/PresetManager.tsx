@@ -28,6 +28,13 @@ import {
 } from '../../util/drag-drop';
 import Loader from '../Loader/Loader';
 
+const BUILTIN_PRESETS: ReadonlyArray<{name: string, file: string}> = [
+    {name: 'VHS', file: 'VHS.json'},
+    {name: 'SHARP', file: 'SHARP.json'},
+    {name: 'High Wave', file: 'high-wave.json'},
+    {name: 'High Noise', file: 'high-noise.json'},
+];
+
 type PartialHandle = {
     kind: 'file' | 'directory' | 'placeholderFile' | 'placeholderDirectory';
     name: string;
@@ -1065,6 +1072,53 @@ const PresetLibraryManager = ({contextValue}: {
     </div>;
 };
 
+const BuiltInPresets = (): JSX.Element => {
+    const appState = useAppState();
+    const addErrorToast = useAddErrorToast();
+    const activeBuiltin = useSignal<string | null>(null);
+    const loading = useSignal<string | null>(null);
+
+    const loadBuiltin = useCallback(async(preset: {name: string, file: string}) => {
+        loading.value = preset.file;
+        try {
+            const res = await fetch(`${import.meta.env.BASE_URL}builtin-presets/${preset.file}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const json = await res.text();
+            const settingsObj = await appState.parsePreset(json);
+            batch(() => {
+                appState.presetsState.selectedPreset.value = null;
+                appState.settingsFromObject(settingsObj);
+                activeBuiltin.value = preset.name;
+            });
+        } catch (err) {
+            addErrorToast(`Failed to load preset "${preset.name}"`, err);
+        } finally {
+            loading.value = null;
+        }
+    }, [appState, addErrorToast]);
+
+    return (
+        <div className={style.builtinPresets}>
+            <div className={style.builtinPresetsTitle}>Built-in presets:</div>
+            <div className={style.builtinPresetsList}>
+                {BUILTIN_PRESETS.map(preset => (
+                    <button
+                        key={preset.file}
+                        type="button"
+                        className={classNames(
+                            style.builtinPresetChip,
+                            activeBuiltin.value === preset.name && style.active,
+                            loading.value === preset.file && style.loading,
+                        )}
+                        onClick={() => void loadBuiltin(preset)}
+                        disabled={loading.value !== null}
+                    >{preset.name}</button>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 const PresetManager = (): JSX.Element => {
     const appState = useAppState();
     const {presetsState, isPortrait} = appState;
@@ -1094,7 +1148,7 @@ const PresetManager = (): JSX.Element => {
 
         return <div className={style.presetManager}>
             <SettingsActions />
-
+            <BuiltInPresets />
             {presetsPanelOpen.value ?
                 isPortrait.value ?
                     <div className={style.fullHeightPanel}>

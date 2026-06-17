@@ -185,7 +185,7 @@ export class AppState {
         this.stillImageFrameRate = signal(30);
         this.renderVideoCodec = signal('avc');
         this.renderVideoBitrate = signal(10);
-        this.renderStillImageDuration = signal(60);
+        this.renderStillImageDuration = signal(15);
         this.renderJobs = signal({state: 'loading'});
         this.mediaBlob = signal(null);
         this.presetsState = {

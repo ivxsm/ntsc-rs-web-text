@@ -1,6 +1,6 @@
 import style from './style.module.scss';
 
-import {Signal} from '@preact/signals';
+import {Signal, useSignal} from '@preact/signals';
 import {DescriptorKind, ResizeFilter, SettingDescriptor} from '../../../ntsc-rs-web-wrapper/build/ntsc_rs_web_wrapper';
 import {useCallback, useId} from 'preact/hooks';
 import {useAppState} from '../../app-state';
@@ -8,6 +8,18 @@ import {CheckboxToggle, Dropdown, Slider, SpinBox} from '../Widgets/Widgets';
 import classNames from 'clsx';
 import PresetManager from '../PresetManager/PresetManager';
 import SETTING_DESCRIPTORS from '../../../ntsc-rs-web-wrapper/build/setting-descriptors';
+import Icon from '../Icon/Icon';
+import {Motif} from '../../util/motif';
+
+const BASIC_SETTING_ID_NAMES = new Set([
+    'use_field',
+    'filter_type',
+    'input_luma_filter',
+    'chroma_phase_error',
+    'chroma_phase_noise_intensity',
+    'chroma_delay_horizontal',
+    'chroma_delay_vertical',
+]);
 
 export const SliderWithSpinBox = (
     {min, max, step, value, disabled, 'aria-labelledby': labelledBy}: {
@@ -197,6 +209,28 @@ const filterDropdownOptions = [
 
 const SettingsList = () => {
     const appState = useAppState();
+    const advancedOpen = useSignal(false);
+
+    const toggleAdvanced = useCallback(() => {
+        advancedOpen.value = !advancedOpen.value;
+    }, [advancedOpen]);
+
+    const renderSetting = (descriptor: SettingDescriptor) => (
+        <Setting
+            descriptor={descriptor}
+            value={appState.settings[descriptor.idName]}
+            settingsMap={appState.settings}
+            disabled={false}
+            key={descriptor.id}
+        />
+    );
+
+    const basicDescriptors = SETTING_DESCRIPTORS.filter(
+        descriptor => BASIC_SETTING_ID_NAMES.has(descriptor.idName),
+    );
+    const advancedDescriptors = SETTING_DESCRIPTORS.filter(
+        descriptor => !BASIC_SETTING_ID_NAMES.has(descriptor.idName),
+    );
 
     return (
         <div className={style.settingsList}>
@@ -210,13 +244,26 @@ const SettingsList = () => {
                     className={style.resizeDropdown}
                 />
             </div>
-            {SETTING_DESCRIPTORS.map(
-                descriptor => <Setting
-                    descriptor={descriptor}
-                    value={appState.settings[descriptor.idName]}
-                    settingsMap={appState.settings}
-                    disabled={false}
-                />,
+            {basicDescriptors.map(renderSetting)}
+            <button
+                type="button"
+                className={style.advancedToggle}
+                aria-expanded={advancedOpen.value ? 'true' : 'false'}
+                onClick={toggleAdvanced}
+            >
+                <Icon
+                    type={advancedOpen.value ? 'arrow-down' : 'arrow-right'}
+                    title={null}
+                    motif={Motif.MONOCHROME}
+                />
+                <span className={style.advancedToggleLabel}>
+                    {advancedOpen.value ? 'Hide advanced settings' : 'Show advanced settings'}
+                </span>
+            </button>
+            {advancedOpen.value && (
+                <div className={style.advancedSettings}>
+                    {advancedDescriptors.map(renderSetting)}
+                </div>
             )}
         </div>
     );
